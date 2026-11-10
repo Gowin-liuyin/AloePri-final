@@ -1,0 +1,54 @@
+# Python cache / test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Large local artifacts and generated outputs
+artifacts/
+outputs/
+model/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Optional virtualenvs
+.venv/
+venv/
+
+# Local service credentials
+credentials/
+*.key
+auth_token.txt
+
+# Local credentials and model artifacts
+.env
+.env.*
+!.env.example
+.secrets/
+credentials/
+*.key
+*.pem
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+*.onnx
+*.zip
+*.tar.gz
+*.egg-info/
+build/
+dist/
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+._*
+.DS_Store
+Thumbs.db
+
+model/
+artifacts/
+outputs/

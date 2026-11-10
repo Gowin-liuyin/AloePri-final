@@ -1,0 +1,252 @@
+import pytest
+
+# 这些断言描述原大仓库，不代表本次独立复现已经取得相同结果。
+pytestmark = pytest.mark.historical_repository_docs
+
+import re
+from pathlib import Path
+
+
+def _normalize_heading_title(title: str) -> str:
+    cleaned = re.sub(r"`", "", title).strip()
+    cleaned = re.sub(r"^\d+(?:\.\d+)*[.)]?\s*", "", cleaned)
+    return cleaned
+
+
+def _extract_section_by_heading(text: str, heading_title: str) -> str:
+    heading_pattern = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.M)
+    headings = list(heading_pattern.finditer(text))
+    target = _normalize_heading_title(heading_title)
+
+    for i, match in enumerate(headings):
+        level = len(match.group(1))
+        if _normalize_heading_title(match.group(2)) != target:
+            continue
+
+        start = match.end()
+        end = len(text)
+        for next_match in headings[i + 1 :]:
+            if len(next_match.group(1)) <= level:
+                end = next_match.start()
+                break
+        return text[start:end]
+    return ""
+
+
+def test_canonical_qwen_deployment_doc_exists() -> None:
+    assert Path("docs/论文一致最终部署主线.md").exists()
+
+
+def test_readme_uses_single_qwen_deployment_entry() -> None:
+    text = Path("README.md").read_text(encoding="utf-8")
+    assert "docs/论文一致最终部署主线.md" in text
+    assert "Qwen Stage H-K redesign" not in text
+    assert "docs/阶段H-K重构迁移说明.md" not in text
+    assert "Qwen 主线：A–K 完整复现" not in text
+    assert "J：standard-shape full-layer 恢复" not in text
+    assert "artifacts/stage_j_full_square/" not in text
+    assert "artifacts/stage_j_full_square_tiny_a/" not in text
+    assert "artifacts/stage_k_release/" in text
+
+
+def test_readme_points_to_repository_and_dual_mainlines() -> None:
+    text = Path("README.md").read_text(encoding="utf-8")
+    assert "docs/复现主线总览.md" in text
+    assert "docs/论文一致最终部署主线.md" in text
+    assert "docs/Llama-3.2-3B最终部署主线.md" in text
+    assert "Qwen 是当前仓库里最完整、最接近论文闭环的主线" in text
+    assert "Llama 当前明显落后于 Qwen" in text
+
+
+def test_readme_uses_canonical_qwen_header_once() -> None:
+    text = Path("README.md").read_text(encoding="utf-8")
+    assert text.count("## Qwen 论文一致最终部署主线") == 1
+
+
+def test_canonical_stage_reports_are_stage_local() -> None:
+    for path in [
+        "docs/阶段H_Qwen可部署混淆表达重构报告.md",
+        "docs/阶段I_部署约束验证报告.md",
+        "docs/阶段J_论文一致部署路线说明.md",
+        "docs/阶段K_Qwen交付包装报告.md",
+    ]:
+        text = Path(path).read_text(encoding="utf-8")
+        assert "不承担全局主线说明" in text
+        assert re.search(
+            r"\[[^\]]*论文一致最终部署主线\.md[^\]]*\]\((?:\./)?(?:docs/)?论文一致最终部署主线\.md\)",
+            text,
+        )
+
+
+def test_stage_j_route_doc_absorbs_bridge_and_weight_proof() -> None:
+    text = Path("docs/阶段J_论文一致部署路线说明.md").read_text(encoding="utf-8")
+    assert "标准权重可见性证明" in text
+    assert "standard-visible bridge line" in text
+    assert "buffered redesign line" in text
+
+
+def test_redundant_stage_j_docs_removed() -> None:
+    assert not Path("docs/阶段J_Qwen全模型部署物化报告.md").exists()
+    assert not Path("docs/阶段J_标准可见桥接导出报告.md").exists()
+    assert not Path("docs/阶段J_标准权重证明报告.md").exists()
+
+
+def test_security_docs_are_subordinate_to_main_line() -> None:
+    index_text = Path("docs/history/security/qwen_security/README.md").read_text(encoding="utf-8")
+    board_text = Path("docs/history/security/qwen_security/推进看板.md").read_text(encoding="utf-8")
+    assert "不是 Qwen 部署主线入口" in index_text
+    assert "仅跟踪安全子域" in board_text
+    canonical_link = "[docs/论文一致最终部署主线.md](../../../论文一致最终部署主线.md)"
+    assert canonical_link in index_text
+    assert canonical_link in board_text
+
+
+def test_mainline_doc_next_steps_are_real_remaining_work() -> None:
+    text = Path("docs/论文一致最终部署主线.md").read_text(encoding="utf-8")
+    next_steps = _extract_section_by_heading(text, "下一步顺序")
+    assert next_steps
+
+    assert "唯一 release 面" in next_steps
+    assert "`IMA`" in next_steps
+    assert "`correctness / VMA / IMA / ISA`" in next_steps
+    assert "`default` / `reference`" in next_steps
+
+    assert "固定唯一主线文档与阶段主报告" not in next_steps
+    assert "合并 Stage-J 冗余文档" not in next_steps
+    assert "移除 legacy / bridge / redesign 并列叙事" not in next_steps
+
+
+def test_stage_j_docs_use_paper_consistent_candidate_as_active_target() -> None:
+    route_text = Path("docs/阶段J_论文一致部署路线说明.md").read_text(encoding="utf-8")
+    main_text = Path("docs/论文一致最终部署主线.md").read_text(encoding="utf-8")
+    readme_text = Path("README.md").read_text(encoding="utf-8")
+    assert "artifacts/stage_j_qwen_paper_consistent" in route_text
+    assert "artifacts/stage_j_qwen_paper_consistent" in readme_text
+    assert "outputs/stage_j/paper_consistent/completion_summary.json" in main_text
+    assert "outputs/stage_k_release/correctness/default.json" in main_text
+    assert "outputs/stage_k_release/correctness/reference.json" in main_text
+
+
+def test_stage_j_docs_demote_historical_bridge_to_auxiliary_evidence() -> None:
+    route_text = Path("docs/阶段J_论文一致部署路线说明.md").read_text(encoding="utf-8")
+    assert "历史中间线" in route_text
+    assert "artifacts/stage_j_qwen_redesign_standard" in route_text
+
+
+def test_stage_k_docs_use_paper_consistent_release_surface() -> None:
+    stage_k_text = Path("docs/阶段K_Qwen交付包装报告.md").read_text(encoding="utf-8")
+    main_text = Path("docs/论文一致最终部署主线.md").read_text(encoding="utf-8")
+    readme_text = Path("README.md").read_text(encoding="utf-8")
+    assert "artifacts/stage_k_release" in stage_k_text
+    assert "artifacts/stage_j_qwen_paper_consistent" in stage_k_text
+    assert "outputs/stage_k_release/correctness/default.json" in stage_k_text
+    assert "outputs/stage_k_release/correctness/reference.json" in stage_k_text
+    assert "outputs/stage_k_release/correctness_summary.json" in stage_k_text
+    assert "outputs/security_qwen/vma/stage_k_default.json" in stage_k_text
+    assert "outputs/security_qwen/ima/stage_k_default.paper_like.json" in stage_k_text
+    assert "outputs/security_qwen/ima/stage_k_default.json" not in stage_k_text
+    assert "outputs/security_qwen/isa/stage_k_default.hidden_state.json" in stage_k_text
+    assert "`default`" in stage_k_text
+    assert "`reference`" in stage_k_text
+    assert "artifacts/stage_k_release" in main_text
+    assert "outputs/stage_k_release/correctness/default.json" in main_text
+    assert "outputs/stage_k_release/correctness/reference.json" in main_text
+    assert "outputs/stage_k_release/correctness_summary.json" in main_text
+    assert "outputs/security_qwen/ima/stage_k_default.paper_like.json" in main_text
+    assert "outputs/security_qwen/ima/stage_k_default.json" not in main_text
+    assert "artifacts/stage_k_release" in readme_text
+
+
+def test_llama_active_docs_are_rooted_under_llama_mainline() -> None:
+    text = Path("docs/Llama-3.2-3B最终部署主线.md").read_text(encoding="utf-8")
+    assert "docs/Llama-3.2-3B标准形状恢复报告.md" in text
+    assert "docs/Llama-3.2-3B噪声定标与StageK推进说明.md" in text
+    assert "docs/Llama-3.2-3B客户端与Server使用说明.md" in text
+    assert "docs/history/llama/Llama-3.2-3B快速使用说明.md" in text
+
+
+def test_security_docs_move_to_history_tree() -> None:
+    text = Path("docs/复现主线总览.md").read_text(encoding="utf-8")
+    assert "docs/history/security/qwen_security/" in text
+
+
+def test_mainline_doc_no_longer_lists_stage_k_cutover_as_remaining_work() -> None:
+    text = Path("docs/论文一致最终部署主线.md").read_text(encoding="utf-8")
+    next_steps = _extract_section_by_heading(text, "下一步顺序")
+    assert next_steps
+    assert "唯一 release 面" in next_steps
+    assert "`IMA`" in next_steps
+    assert "将 `Stage K` 切换到最终论文一致线" not in next_steps
+
+
+def test_qwen_mainline_doc_has_explicit_paper_gap_section() -> None:
+    text = Path("docs/论文一致最终部署主线.md").read_text(encoding="utf-8")
+    section = _extract_section_by_heading(text, "与原始论文的当前差异")
+    assert section
+    assert "不能表述为“已经与论文完全等价”" in section
+    assert "`paper_consistent`" in section
+    assert "`VMA / IMA / ISA`" in section
+    assert "本地文档公共语料代理" in section
+    assert "`alpha_e = 1.0`" in section
+    assert "`alpha_h = 0.2`" in section
+
+
+def test_qwen_mainline_doc_lists_security_results_and_remaining_problem() -> None:
+    text = Path("docs/论文一致最终部署主线.md").read_text(encoding="utf-8")
+    checklist = _extract_section_by_heading(text, "当前安全性结果与剩余问题")
+    assert checklist
+
+    assert "`artifacts/stage_k_release`" in checklist
+    assert "`default`" in checklist
+    assert "`reference`" in checklist
+    assert "`stage_k_default`" in checklist
+    assert "`stage_k_reference`" in checklist
+    assert "`scripts/export_stage_k_release.py`" in checklist
+    assert "`scripts/infer_stage_k_release.py`" in checklist
+    assert "`--prompt`" in checklist
+    assert "`scripts/security_qwen/run_vma.py`" in checklist
+    assert "`scripts/security_qwen/run_ima.py`" in checklist
+    assert "`scripts/security_qwen/run_isa.py`" in checklist
+    assert "`outputs/stage_k_release/correctness/default.json`" in checklist
+    assert "`outputs/stage_k_release/correctness/reference.json`" in checklist
+    assert "`outputs/stage_k_release/correctness_summary.json`" in checklist
+    assert "当前 correctness 证据仍继承自 `Stage J`" not in checklist
+    assert "还缺 `Stage K` 自身的 correctness 结果文件" not in checklist
+    assert "`outputs/security_qwen/vma/stage_k_default.json`" in checklist
+    assert "`outputs/security_qwen/ima/stage_k_reference.paper_like.json`" in checklist
+    assert "`outputs/security_qwen/ima/stage_k_reference.json`" not in checklist
+    assert "`outputs/security_qwen/isa/stage_k_default.hidden_state.json`" in checklist
+    assert "`outputs/security_qwen/isa/stage_k_default.attention_score.json`" in checklist
+    assert "`outputs/security_qwen/summary/security_catalog.json`" in checklist
+    assert "`hidden_state`" in checklist
+    assert "`attention_score`" in checklist
+    assert "`token_top1_recovery_rate = 0.0859375`" in checklist
+    assert "`token_top1_recovery_rate = 0.0`" in checklist
+    assert "`intermediate_top1_recovery_rate = 0.0`" in checklist
+    assert "`IMA`：低风险" in checklist
+    assert "不再是当前主线复跑对象" in checklist
+
+
+def test_active_qwen_docs_no_longer_use_minimal_ima_as_mainline_wording() -> None:
+    for path in [
+        "README.md",
+        "docs/复现主线总览.md",
+        "docs/论文一致最终部署主线.md",
+        "docs/阶段K_Qwen交付包装报告.md",
+    ]:
+        text = Path(path).read_text(encoding="utf-8")
+        assert "历史最小基线" not in text
+        assert "completed_minimal_baseline" not in text
+        assert "row-level learnability" not in text
+
+
+def test_llama_mainline_doc_lists_release_evidence_inputs() -> None:
+    text = Path("docs/Llama-3.2-3B最终部署主线.md").read_text(encoding="utf-8")
+    assert "## 4. 当前证据入口" in text
+    assert "artifacts/stage_j_llama_instruct_paper_consistent" in text
+    assert "outputs/stage_k_llama_release/correctness/default.json" in text
+    assert "outputs/stage_k_llama_release/correctness/reference.json" in text
+    assert "artifacts/stage_k_llama_release/catalog.json" in text
+    assert "Llama-3.2-3B-Instruct paper_consistent" in text
+    assert "安全评测和复杂扰动恢复程度仍需要后续继续补齐" in text
+    assert "已基本与 Qwen 对齐" not in text

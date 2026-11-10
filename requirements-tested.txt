@@ -1,0 +1,9 @@
+# 本次小模型测试使用的版本；GPU wheel 的选择取决于本机 CUDA 环境。
+numpy==2.4.6
+torch==2.13.0
+transformers==5.19.0
+huggingface-hub==1.33.0
+accelerate==1.15.0
+safetensors==0.8.0
+pytest==9.1.1
+cryptography==49.0.0
