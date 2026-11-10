@@ -16,7 +16,7 @@
 | `recover_weight_mapping` / `recover_from_directories` | Gate-IA、完整行排序/L1匹配/投票的 VMA，以及采用二维列空间投影解释的 Attn-IA。目录支持 Qwen2/Llama/Qwen2-MoE/Mixtral；Attn-IA 的解释并非原文公式唯一确定的算法。 |
 | `recover_frequency_mapping` | 新增不依赖目标目录注册表或客户端密钥的 TFMA；公开与观测编号序列由调用者分别提供。 |
 
-初始命令与文件格式见 [第二轮说明](repair_round2.md)，最新功能与限制见 [第三次补充](repair_round3.md)。VMA 六类权重组合均有构造代码；MoE 支持打包/逐专家格式，集合特征不假定专家编号一致。词表平方大小的矩阵超出显式预算时会报错，不会悄悄退回抽样。
+初始命令与文件格式见 [第二轮说明](archive/repair_round2.md)，第三轮实现与限制见 [第三次补充](archive/repair_round3.md)。VMA 六类权重组合均有构造代码；MoE 支持打包/逐专家格式，集合特征不假定专家编号一致。词表平方大小的矩阵超出显式预算时会报错，不会悄悄退回抽样。
 
 ## IMA、ISA 为什么需要多写一个参数
 

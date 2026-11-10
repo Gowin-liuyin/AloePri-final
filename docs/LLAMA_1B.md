@@ -77,7 +77,7 @@ Windows 本地 Llama/Qwen 加载按分片逐个读取参数，并初始化对应
 .\.venv\Scripts\python.exe scripts/evaluation/privacy/run_additional_attacks.py weights --attack vma --baseline-model-dir model/Llama-3.2-1B-Instruct --server-dir artifacts/llama_3_2_1b_instruct/square_zero_noise/server --combinations embed_head --output outputs/evaluation/llama_3_2_1b_instruct/vma.json
 ```
 
-任务数据格式见 `docs/repair_round3.md`，攻击协议见 `docs/security_attack_protocol.md`。完整词表攻击会消耗较多内存和时间，可使用独立选择的 `--candidate-ids`、`--observed-ids` JSON 列表控制规模。旧 `security_qwen` 预设目标和 `AloePriEngine.obfuscate_model` 仍属于 Qwen 研究路线；Llama 使用专用导出入口及通用目录评测，避免把旧 Qwen 产物当成 1B 结果。
+任务数据格式见 `docs/archive/repair_round3.md`，攻击协议见 `docs/security_attack_protocol.md`。完整词表攻击会消耗较多内存和时间，可使用独立选择的 `--candidate-ids`、`--observed-ids` JSON 列表控制规模。旧 `security_qwen` 预设目标和 `AloePriEngine.obfuscate_model` 仍属于 Qwen 研究路线；Llama 使用专用导出入口及通用目录评测，避免把旧 Qwen 产物当成 1B 结果。
 
 当前同宽版本是符号置换方阵工程变体。正确性检查通过只表示所测提示的输出和误差符合检查条件，不表示完成论文的扩维复现或隐私结论。
 

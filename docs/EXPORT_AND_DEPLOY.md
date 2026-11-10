@@ -8,7 +8,7 @@
 | 离线导出 | [Llama](../scripts/offline_obfuscation/export_llama_checkpoint.py) / [Qwen2](../scripts/offline_obfuscation/export_qwen_checkpoint.py) | 全层导出，使用新输出目录；首次做等价验证时将两种噪声都设为 0 |
 | 组装发布包 | [Llama](../scripts/release/export_llama_bundle.py) / [Qwen2](../scripts/release/export_qwen_bundle.py) | 检查 profile、权重名、形状和分片；保留 manifest |
 | 正确性对照 | [Llama](../scripts/evaluation/run_llama_correctness.py) / [Qwen2](../scripts/evaluation/run_qwen_correctness.py) | 使用同一底座和 tokenizer；记录 dtype、容差、生成一致性和误差 |
-| 推理 | [infer_bundle.py](../scripts/release/infer_bundle.py) | 先在本地验证，分进程模式参见 [通信说明](repair_round3.md) |
+| 推理 | [infer_bundle.py](../scripts/release/infer_bundle.py) | 先在本地验证，分进程模式参见 [通信说明](archive/repair_round3.md) |
 
 初次只想检查代码能加载，可先运行 `python -m pytest -q`。依赖模型权重或历史工件的测试可能跳过。Windows 的 1B 本机启动脚本另见 [LLAMA_1B.md](LLAMA_1B.md)，其中的机器路径是示例；通用命令请显式指定本机目录。
 
