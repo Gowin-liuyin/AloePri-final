@@ -105,3 +105,8 @@ release bundle 是模型持有者在本地使用的完整包，包含客户端�
 | 攻击评测 | `src/security_qwen/` |
 
 旧架构文档保留了历史阶段名称，具体行为以当前代码和本 README 的限制说明为准。
+
+## 更多文档
+
+- [导出、验证与部署](docs/EXPORT_AND_DEPLOY.md)
+- [维护与贡献](CONTRIBUTING.md)
